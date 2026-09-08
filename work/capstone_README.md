@@ -303,8 +303,10 @@ work/notebooks/capstone.ipynb
 
 Research paper URL:
 
-To be added after the paper is deployed.
+https://magar-bhuwan.github.io/ML-Internship-Assignments/
+
 
 Demo video:
 
-To be added after the FL-09 demo is recorded.
+https://drive.google.com/file/d/1KDzR1rfRF3HDkxPRr9_Pe02ROjY5wytQ/view?usp=sharing
+
