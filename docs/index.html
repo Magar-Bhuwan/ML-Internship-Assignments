@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Can Historical Content Signals Help Prioritize Content for Review?</title>
+
+    <meta
+        name="description"
+        content="A machine-learning case study on prioritizing content review using historical content-performance signals and freshness."
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.7;
+            color: #222;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px 70px;
+        }
+
+        article {
+            background: white;
+            padding: 50px 60px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2.3rem;
+            line-height: 1.25;
+            color: #111827;
+        }
+
+        h2 {
+            margin-top: 42px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            color: #111827;
+        }
+
+        h3 {
+            color: #374151;
+        }
+
+        p {
+            margin: 16px 0;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 7px 0;
+        }
+
+        code {
+            background: #f1f3f5;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.92em;
+        }
+
+        blockquote {
+            margin: 20px 0;
+            padding: 15px 20px;
+            border-left: 4px solid #6b7280;
+            background: #f9fafb;
+            font-style: italic;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.05rem;
+            margin-bottom: 35px;
+        }
+
+        .abstract {
+            background: #f8fafc;
+            padding: 25px 28px;
+            border-left: 4px solid #374151;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #d1d5db;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric {
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.5rem;
+            color: #111827;
+        }
+
+        .workflow {
+            margin: 25px 0;
+            padding: 22px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        a {
+            color: #2563eb;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 15px 10px 40px;
+            }
+
+            article {
+                padding: 30px 22px;
+                border-radius: 8px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.35rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th,
+            td {
+                padding: 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+<article>
+
+    <h1>Can Historical Content Signals Help Prioritize Content for Review?</h1>
+
+    <p class="subtitle">
+        A machine-learning case study for content-performance prioritization
+    </p>
+
+    <h2 id="abstract">Abstract</h2>
+
+    <div class="abstract">
+        <p>
+            Can historical content-performance signals and content freshness be
+            used to prioritize which content should be reviewed first?
+        </p>
+
+        <p>
+            Using 30,000 anonymized FlyRank content records, this study combines
+            freshness, visibility, and historical performance signals to identify
+            content with a declining-performance target.
+        </p>
+
+        <p>
+            A Random Forest classifier was evaluated against a simple
+            freshness-and-visibility baseline using a grouped-by-client test split
+            to reduce client-level overlap between training and testing data.
+        </p>
+
+        <p>
+            On that shared test split, the Random Forest achieved
+            <strong>0.6798 precision, 0.7989 recall, and 0.7345 F1</strong>,
+            compared with <strong>0.6389 precision, 0.0130 recall, and
+            0.0255 F1</strong> for the baseline.
+        </p>
+
+        <p>
+            The result supports using historical signals to prioritize a human
+            content-review queue, while the observational data and lack of a
+            controlled refresh experiment mean the model should be treated as
+            decision support rather than proof that refreshing content will
+            improve future performance.
+        </p>
+    </div>
+
+
+    <h2 id="problem">1. Problem Framing</h2>
+
+    <p>
+        Content teams rarely have unlimited time to review every existing page.
+    </p>
+
+    <p>
+        When a large content portfolio contains pages with different levels of
+        freshness, visibility, and performance change, a practical question is
+        which pages deserve human review first.
+    </p>
+
+    <p>
+        This capstone addresses that content-prioritization problem in the
+        FlyRank Product Performance context.
+    </p>
+
+    <p>The research question is:</p>
+
+    <blockquote>
+        Can historical content-performance signals and content freshness be used
+        to prioritize which content should be reviewed first?
+    </blockquote>
+
+    <p>
+        The goal is not to automatically decide which content should be changed.
+        The goal is to provide stronger evidence for deciding where limited
+        review effort should be focused.
+    </p>
+
+
+    <h2 id="data">2. Data Safety</h2>
+
+    <p>
+        The analysis uses <strong>30,000 anonymized FlyRank content records</strong>
+        with 44 columns.
+    </p>
+
+    <p>Important signals include:</p>
+
+    <ul>
+        <li><code>days_since_last_update</code></li>
+        <li><code>impressions_90d</code></li>
+        <li><code>clicks_90d</code></li>
+        <li><code>trend_direction</code></li>
+        <li><code>trend_pct</code></li>
+    </ul>
+
+    <p>
+        No client names, private URLs, search queries, or other client-identifying
+        information are used in the report.
+    </p>
+
+    <p>
+        The dataset is treated as observational data.
+    </p>
+
+    <p>
+        The results are therefore framed as observed and directional rather than
+        causal.
+    </p>
+
+
+    <h2 id="baseline">3. Baseline</h2>
+
+    <p>The baseline uses two simple signals:</p>
+
+    <ul>
+        <li><code>days_since_last_update &gt;= 104</code></li>
+        <li><code>impressions_90d &gt;= 3,616</code></li>
+    </ul>
+
+    <p>
+        The purpose of the baseline is to provide a transparent comparison
+        against the machine-learning approach.
+    </p>
+
+    <p>On the grouped-client test split:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>Baseline</td>
+                <td>0.6389</td>
+                <td>0.0130</td>
+                <td>0.0255</td>
+            </tr>
+
+            <tr>
+                <td>Random Forest</td>
+                <td>0.6798</td>
+                <td>0.7989</td>
+                <td>0.7345</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <h2 id="model">4. Model / Analysis</h2>
+
+    <p>The target is:</p>
+
+    <p>
+        <code>declining_target = (trend_direction == "down").astype(int)</code>
+    </p>
+
+    <p>
+        A Random Forest classifier was trained using historical content and
+        performance signals.
+    </p>
+
+    <p>
+        The analysis uses grouped-by-client validation so that records from the
+        same client are not placed in both the training and testing partitions.
+    </p>
+
+    <p>
+        The goal is prioritization rather than automatic content modification.
+    </p>
+
+
+    <h2 id="evaluation">5. Evaluation</h2>
+
+    <p>
+        The final comparison uses the same grouped-by-client test split for both
+        the baseline and Random Forest.
+    </p>
+
+    <h3>Random Forest</h3>
+
+    <div class="metric-grid">
+
+        <div class="metric">
+            <strong>0.6798</strong>
+            Precision
+        </div>
+
+        <div class="metric">
+            <strong>0.7989</strong>
+            Recall
+        </div>
+
+        <div class="metric">
+            <strong>0.7345</strong>
+            F1
+        </div>
+
+    </div>
+
+    <h3>Baseline</h3>
+
+    <div class="metric-grid">
+
+        <div class="metric">
+            <strong>0.6389</strong>
+            Precision
+        </div>
+
+        <div class="metric">
+            <strong>0.0130</strong>
+            Recall
+        </div>
+
+        <div class="metric">
+            <strong>0.0255</strong>
+            F1
+        </div>
+
+    </div>
+
+    <p>
+        The strongest difference is recall: the Random Forest identified
+        substantially more declining-content cases than the simple baseline
+        on this test split.
+    </p>
+
+
+    <h2 id="interpretation">6. Interpretation</h2>
+
+    <p>
+        The result suggests that combining multiple historical content-performance
+        signals can provide a stronger prioritization signal than the simple
+        freshness-and-visibility rule.
+    </p>
+
+    <p>
+        However, the result should not be interpreted as proof that the identified
+        content will improve after being refreshed.
+    </p>
+
+    <p>
+        The analysis is observational, the thresholds are dataset-specific,
+        and the evaluation does not establish that changing content causes
+        future performance improvement.
+    </p>
+
+
+    <h2 id="recommendation">7. Recommendation</h2>
+
+    <p>
+        The highest-priority review group is stale and visible content:
+    </p>
+
+    <ul>
+        <li><code>days_since_last_update &gt;= 104</code></li>
+        <li><code>impressions_90d &gt;= 3,616</code></li>
+    </ul>
+
+    <p>
+        These items should enter a human review queue.
+    </p>
+
+    <div class="workflow">
+        Historical signals
+        &rarr;
+        ranked review queue
+        &rarr;
+        human validation
+        &rarr;
+        decision
+    </div>
+
+    <p>
+        The model should not automatically delete content, publish rewrites,
+        or make major content changes without human review.
+    </p>
+
+
+    <h2 id="reproducibility">8. Reproducibility</h2>
+
+    <p>Source notebook:</p>
+
+    <p>
+        <code>work/notebooks/capstone.ipynb</code>
+    </p>
+
+    <p>Capstone report:</p>
+
+    <p>
+        <code>work/capstone_report.md</code>
+    </p>
+
+    <p>
+        The analysis uses fixed random-state settings for the validation process.
+    </p>
+
+    <p>
+        The notebook should be run from top to bottom to reproduce the analysis.
+    </p>
+
+    <p>
+        The deployed research paper URL is stored in:
+    </p>
+
+    <p>
+        <code>submission/paper_url.txt</code>
+    </p>
+
+
+    <h2 id="limitations">Limitations</h2>
+
+    <p>
+        This analysis provides directional, dataset-specific evidence rather
+        than causal proof.
+    </p>
+
+    <p>
+        The dataset does not provide a fully verified prediction timestamp and
+        completely separated future outcome window for production forecasting.
+    </p>
+
+    <p>
+        The 104-day freshness threshold and 3,616-impression visibility threshold
+        are dataset-specific and should be revalidated before operational use.
+    </p>
+
+    <p>
+        The final queue should therefore be treated as decision support for
+        human reviewers.
+    </p>
+
+
+    <h2 id="conclusion">Conclusion</h2>
+
+    <p>
+        Historical content-performance signals can provide useful evidence for
+        prioritizing content review.
+    </p>
+
+    <p>
+        The Random Forest performed substantially better than the simple baseline
+        on the grouped-client evaluation.
+    </p>
+
+    <p>
+        The practical recommendation is to use the model as a review-prioritization
+        tool, followed by human validation, rather than as an automatic
+        content-change system.
+    </p>
+
+
+    <div class="footer">
+        <p>
+            Capstone case study — FlyRank Product Performance
+        </p>
+    </div>
+
+</article>
+
+</div>
+
+</body>
+</html>
