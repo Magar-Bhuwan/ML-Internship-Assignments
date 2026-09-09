@@ -308,5 +308,4 @@ https://magar-bhuwan.github.io/ML-Internship-Assignments/
 
 Demo video:
 
-https://drive.google.com/file/d/1KDzR1rfRF3HDkxPRr9_Pe02ROjY5wytQ/view?usp=sharing
-
+https://youtu.be/kKvHFwMvViU

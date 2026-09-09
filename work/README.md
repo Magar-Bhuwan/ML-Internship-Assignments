@@ -872,5 +872,5 @@ Dataset usage remains subject to the project's `DATA_USE.md` requirements.
 **Final v2 grouped-client evaluation:** Complete
 **Ranked recommendation queue:** Complete
 **README documentation:** Complete
-**Demo video:** Add final unlisted YouTube link after recording
+**Demo video:** https://youtu.be/kKvHFwMvViU
 **Paper deployment URL:** Maintained separately in `submission/paper_url.txt`
